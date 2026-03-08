@@ -1,4 +1,5 @@
 // concursos-api/src/models.rs
+// ALTERAÇÃO: Questao sem alternativas, gabarito boolean, justificativa adicionada
 
 use serde::{Deserialize, Serialize};
 
@@ -29,25 +30,22 @@ pub struct Assunto {
 pub struct Questao {
     pub id: i64,
     pub enunciado: String,
-    pub alternativa_a: Option<String>,
-    pub alternativa_b: Option<String>,
-    pub alternativa_c: Option<String>,
-    pub alternativa_d: Option<String>,
-    pub alternativa_e: Option<String>,
-    pub alternativa_correta: String,
+    pub gabarito: bool,                // true = Certo, false = Errado
+    pub justificativa: Option<String>, // explicação exibida após responder
     pub assunto_id: Option<i64>,
     pub concurso_id: Option<i64>,
 }
 
-// ── DTOs de request ──────────────────────────────────────
+// ── DTOs ────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
 pub struct ValidarRespostaRequest {
-    pub resposta: String,
+    pub resposta: bool, // true = Certo, false = Errado
 }
 
 #[derive(Debug, Serialize)]
 pub struct ValidarRespostaResponse {
     pub correta: bool,
-    pub alternativa_correta: String,
+    pub gabarito: bool,
+    pub justificativa: Option<String>,
 }
