@@ -1,0 +1,46 @@
+/* concursos-web/src/components/Erro.module.css */
+
+.wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: var(--err-bg);
+    border: 1px solid rgba(192, 57, 43, 0.18);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+}
+
+.icon {
+    font-size: 1.1rem;
+    color: var(--err);
+    margin-top: 1px;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.msg {
+    color: var(--err);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.btn {
+    background: none;
+    border: 1.5px solid var(--err);
+    color: var(--err);
+    border-radius: var(--radius-sm);
+    padding: 4px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: fit-content;
+    transition: background var(--duration) var(--ease);
+}
+
+.btn:hover {
+    background: rgba(192, 57, 43, 0.08);
+}

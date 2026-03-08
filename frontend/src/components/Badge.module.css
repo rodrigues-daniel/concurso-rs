@@ -1,0 +1,30 @@
+/* concursos-web/src/components/Badge.module.css */
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.default {
+    background: var(--surface-soft);
+    color: var(--ink-soft);
+}
+
+.accent {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.ok {
+    background: var(--ok-bg);
+    color: var(--ok);
+}
+
+.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+}
