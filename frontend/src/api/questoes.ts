@@ -1,4 +1,5 @@
 // concursos-web/src/api/questoes.ts
+// ALTERAÇÃO: validarResposta envia boolean
 
 import api from "./client";
 import type { Questao, ValidarRespostaResponse } from "../types";
@@ -16,7 +17,7 @@ export const getQuestoes = async (
 
 export const validarResposta = async (
     questaoId: number,
-    resposta: string
+    resposta: boolean    // true = Certo, false = Errado
 ): Promise<ValidarRespostaResponse> => {
     const { data } = await api.post<ValidarRespostaResponse>(
         `/api/questoes/${questaoId}/validar`,

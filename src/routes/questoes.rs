@@ -1,4 +1,5 @@
 // concursos-api/src/routes/questoes.rs
+// ALTERAÇÃO: validar_resposta agora recebe bool e retorna justificativa
 
 use crate::{
     db::Db,
@@ -32,7 +33,8 @@ async fn listar(
     let questoes = match (filtro.concurso_id, filtro.assunto_id) {
         (Some(c), Some(a)) => {
             sqlx::query_as::<_, Questao>(
-                "SELECT * FROM questoes WHERE concurso_id = $1 AND assunto_id = $2 ORDER BY id",
+                "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+             FROM questoes WHERE concurso_id = $1 AND assunto_id = $2 ORDER BY id",
             )
             .bind(c)
             .bind(a)
@@ -42,7 +44,8 @@ async fn listar(
 
         (Some(c), None) => {
             sqlx::query_as::<_, Questao>(
-                "SELECT * FROM questoes WHERE concurso_id = $1 ORDER BY id",
+                "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+             FROM questoes WHERE concurso_id = $1 ORDER BY id",
             )
             .bind(c)
             .fetch_all(&pool)
@@ -50,16 +53,22 @@ async fn listar(
         }
 
         (None, Some(a)) => {
-            sqlx::query_as::<_, Questao>("SELECT * FROM questoes WHERE assunto_id = $1 ORDER BY id")
-                .bind(a)
-                .fetch_all(&pool)
-                .await?
+            sqlx::query_as::<_, Questao>(
+                "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+             FROM questoes WHERE assunto_id = $1 ORDER BY id",
+            )
+            .bind(a)
+            .fetch_all(&pool)
+            .await?
         }
 
         (None, None) => {
-            sqlx::query_as::<_, Questao>("SELECT * FROM questoes ORDER BY id")
-                .fetch_all(&pool)
-                .await?
+            sqlx::query_as::<_, Questao>(
+                "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+             FROM questoes ORDER BY id",
+            )
+            .fetch_all(&pool)
+            .await?
         }
     };
 
@@ -67,11 +76,14 @@ async fn listar(
 }
 
 async fn buscar_por_id(State(pool): State<Db>, Path(id): Path<i64>) -> Result<Json<Questao>> {
-    let questao = sqlx::query_as::<_, Questao>("SELECT * FROM questoes WHERE id = $1")
-        .bind(id)
-        .fetch_optional(&pool)
-        .await?
-        .ok_or(AppError::NotFound)?;
+    let questao = sqlx::query_as::<_, Questao>(
+        "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+         FROM questoes WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
 
     Ok(Json(questao))
 }
@@ -81,18 +93,18 @@ async fn validar_resposta(
     Path(id): Path<i64>,
     Json(body): Json<ValidarRespostaRequest>,
 ) -> Result<Json<ValidarRespostaResponse>> {
-    let questao = sqlx::query_as::<_, Questao>("SELECT * FROM questoes WHERE id = $1")
-        .bind(id)
-        .fetch_optional(&pool)
-        .await?
-        .ok_or(AppError::NotFound)?;
-
-    let correta = questao
-        .alternativa_correta
-        .eq_ignore_ascii_case(&body.resposta);
+    let questao = sqlx::query_as::<_, Questao>(
+        "SELECT id, enunciado, gabarito, justificativa, assunto_id, concurso_id
+         FROM questoes WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
 
     Ok(Json(ValidarRespostaResponse {
-        correta,
-        alternativa_correta: questao.alternativa_correta,
+        correta: questao.gabarito == body.resposta,
+        gabarito: questao.gabarito,
+        justificativa: questao.justificativa,
     }))
 }

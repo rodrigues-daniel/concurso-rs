@@ -1,5 +1,6 @@
 -- Add migration script here
 -- concursos-api/migrations/001_create_schema.sql
+-- ALTERAÇÃO: alternativas removidas, tipo_questao adicionado
 
 CREATE TABLE IF NOT EXISTS bancas (
     id        BIGSERIAL    PRIMARY KEY,
@@ -22,14 +23,10 @@ CREATE TABLE IF NOT EXISTS assuntos (
 );
 
 CREATE TABLE IF NOT EXISTS questoes (
-    id                  BIGSERIAL  PRIMARY KEY,
-    enunciado           TEXT       NOT NULL,
-    alternativa_a       TEXT,
-    alternativa_b       TEXT,
-    alternativa_c       TEXT,
-    alternativa_d       TEXT,
-    alternativa_e       TEXT,
-    alternativa_correta VARCHAR(1) NOT NULL,
+    id                  BIGSERIAL    PRIMARY KEY,
+    enunciado           TEXT         NOT NULL,
+    gabarito            BOOLEAN      NOT NULL,
+    justificativa       TEXT,
     assunto_id          BIGINT REFERENCES assuntos(id)  ON DELETE SET NULL,
     concurso_id         BIGINT REFERENCES concursos(id) ON DELETE CASCADE
 );

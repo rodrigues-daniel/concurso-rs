@@ -65,8 +65,6 @@
     gap: 2rem;
     flex-wrap: wrap;
     box-shadow: var(--shadow-sm);
-    position: relative;
-    overflow: hidden;
 }
 
 .placarInfo {
@@ -106,23 +104,23 @@
     transition: width 0.4s var(--ease);
 }
 
-/* ── Questão ─────────────────────────────────────────── */
+/* ── Card da questão ─────────────────────────────────── */
 .questaoCard {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .questaoMeta {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
 }
 
 .questaoNum {
     font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
     color: var(--ink);
 }
@@ -132,134 +130,183 @@
     font-weight: 400;
 }
 
+/* ── Instrução e enunciado ───────────────────────────── */
+.instrucao {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    font-style: italic;
+}
+
 .enunciado {
-    font-size: 0.97rem;
-    line-height: 1.8;
+    font-size: 1rem;
+    line-height: 1.85;
     color: var(--ink);
     border-left: 3px solid var(--accent);
-    padding-left: 1.1rem;
+    padding: 0.75rem 1.1rem;
+    background: var(--canvas);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
-/* ── Alternativas ────────────────────────────────────── */
-.alternativas {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+/* ── Opções Certo / Errado ───────────────────────────── */
+.opcoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
 }
 
-.alternativa {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    border: 1.5px solid rgba(12, 15, 26, 0.08);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    text-align: left;
-    cursor: pointer;
-    transition: border-color var(--duration) var(--ease),
-        background var(--duration) var(--ease);
-    width: 100%;
-}
-
-.alternativa:hover:not(:disabled) {
-    border-color: var(--accent);
-    background: var(--accent-light);
-}
-
-.alternativa:disabled {
-    cursor: default;
-}
-
-.altLetra {
-    min-width: 26px;
-    height: 26px;
-    background: var(--surface-soft);
-    color: var(--ink-soft);
-    border-radius: var(--radius-sm);
+/* base compartilhada */
+.btnCerto,
+.btnErrado {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.78rem;
+    gap: 0.6rem;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 2px solid transparent;
+    font-family: var(--font-body);
+    font-size: 1rem;
     font-weight: 700;
-    flex-shrink: 0;
-    font-family: var(--font-display);
+    cursor: pointer;
+    transition: background var(--duration) var(--ease),
+        border-color var(--duration) var(--ease),
+        transform var(--duration) var(--ease);
 }
 
-.altTexto {
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: var(--ink);
-    padding-top: 2px;
-}
-
-.altSelecionada {
-    border-color: var(--accent) !important;
-    background: var(--accent-light) !important;
-}
-
-.altSelecionada .altLetra {
-    background: var(--accent);
-    color: white;
-}
-
-.altCorreta {
-    border-color: var(--ok) !important;
-    background: var(--ok-bg) !important;
-}
-
-.altCorreta .altLetra {
-    background: var(--ok);
-    color: white;
-}
-
-.altCorreta .altTexto {
+.btnCerto {
+    background: var(--ok-bg);
     color: var(--ok);
-    font-weight: 500;
+    border-color: rgba(13, 122, 78, 0.2);
 }
 
-.altErrada {
-    border-color: var(--err) !important;
-    background: var(--err-bg) !important;
+.btnCerto:hover:not(:disabled) {
+    background: rgba(13, 122, 78, 0.15);
+    border-color: var(--ok);
+    transform: translateY(-2px);
 }
 
-.altErrada .altLetra {
-    background: var(--err);
+.btnErrado {
+    background: var(--err-bg);
+    color: var(--err);
+    border-color: rgba(192, 57, 43, 0.2);
+}
+
+.btnErrado:hover:not(:disabled) {
+    background: rgba(192, 57, 43, 0.15);
+    border-color: var(--err);
+    transform: translateY(-2px);
+}
+
+/* selecionado antes de confirmar */
+.btnSelecionado.btnCerto {
+    background: rgba(13, 122, 78, 0.18);
+    border-color: var(--ok);
+    box-shadow: 0 0 0 3px rgba(13, 122, 78, 0.15);
+}
+
+.btnSelecionado.btnErrado {
+    background: rgba(192, 57, 43, 0.18);
+    border-color: var(--err);
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
+}
+
+/* gabarito correto (após responder) */
+.btnGabarito.btnCerto {
+    background: var(--ok);
+    border-color: var(--ok);
     color: white;
 }
 
-.altErrada .altTexto {
-    color: var(--err);
+.btnGabarito.btnErrado {
+    background: var(--err);
+    border-color: var(--err);
+    color: white;
+}
+
+/* escolha errada do usuário */
+.btnErrouEscolha {
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+
+/* botões inativos após responder */
+.btnInativo {
+    opacity: 0.35;
+}
+
+.btnCerto:disabled,
+.btnErrado:disabled {
+    cursor: default;
+    transform: none;
+}
+
+.opcaoIcone {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.opcaoTexto {
+    font-size: 0.95rem;
 }
 
 /* ── Feedback ────────────────────────────────────────── */
 .feedback {
-    padding: 0.85rem 1.1rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.9rem;
+    border-radius: var(--radius);
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
     animation: fadeIn 0.25s var(--ease);
 }
 
 .feedbackOk {
     background: var(--ok-bg);
-    color: var(--ok);
     border: 1px solid rgba(13, 122, 78, 0.2);
 }
 
 .feedbackErr {
     background: var(--err-bg);
-    color: var(--err);
     border: 1px solid rgba(192, 57, 43, 0.2);
 }
 
-/* ── Botões ──────────────────────────────────────────── */
-.botoes {
-    display: flex;
-    gap: 0.75rem;
+.feedbackTitulo {
+    font-weight: 700;
+    font-size: 0.92rem;
 }
 
-.btnPrimario {
+.feedbackOk .feedbackTitulo {
+    color: var(--ok);
+}
+
+.feedbackErr .feedbackTitulo {
+    color: var(--err);
+}
+
+.justificativa {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    border-top: 1px solid rgba(12, 15, 26, 0.08);
+    padding-top: 0.6rem;
+    line-height: 1.65;
+}
+
+.justificativaTitulo {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+}
+
+/* ── Botão confirmar ─────────────────────────────────── */
+.botoes {
+    display: flex;
+}
+
+.btnConfirmar {
     background: var(--accent);
     color: white;
     border: none;
@@ -272,18 +319,18 @@
         transform var(--duration) var(--ease);
 }
 
-.btnPrimario:hover:not(:disabled) {
+.btnConfirmar:hover:not(:disabled) {
     background: var(--accent-dark);
     transform: translateY(-1px);
 }
 
-.btnPrimario:disabled {
+.btnConfirmar:disabled {
     opacity: 0.45;
     cursor: not-allowed;
     transform: none;
 }
 
-/* ── Resultado ───────────────────────────────────────── */
+/* ── Resultado final ─────────────────────────────────── */
 .resultado {
     display: flex;
     flex-direction: column;
@@ -319,7 +366,6 @@
 .circulo {
     width: 100%;
     height: 100%;
-    transform: rotate(0deg);
 }
 
 .circuloTexto {
@@ -356,5 +402,10 @@
 
     .placar {
         gap: 1rem;
+    }
+
+    .opcoes {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
     }
 }

@@ -1,4 +1,5 @@
 // concursos-web/src/pages/QuestoesPage.tsx
+// ALTERAÇÃO COMPLETA: lógica Certo/Errado, justificativa, visual CEBRASPE
 
 import { useState } from "react";
 import { getQuestoes, validarResposta } from "../api/questoes";
@@ -12,13 +13,17 @@ import Erro from "../components/Erro";
 import Badge from "../components/Badge";
 import styles from "./QuestoesPage.module.css";
 
-type Feedback = { correta: boolean; alternativaCorreta: string } | null;
+type Feedback = {
+    correta: boolean;
+    gabarito: boolean;
+    justificativa: string | null;
+} | null;
 
 export default function QuestoesPage() {
     const [concursoId, setConcursoId] = useState<number | undefined>();
     const [assuntoId, setAssuntoId] = useState<number | undefined>();
     const [indice, setIndice] = useState(0);
-    const [selecionada, setSelecionada] = useState<string>("");
+    const [selecionada, setSelecionada] = useState<boolean | null>(null);
     const [feedback, setFeedback] = useState<Feedback>(null);
     const [acertos, setAcertos] = useState(0);
     const [respondidas, setRespondidas] = useState(0);
@@ -41,22 +46,26 @@ export default function QuestoesPage() {
     const concluido = indice >= total && total > 0;
     const percentual = total > 0 ? (acertos / total) * 100 : 0;
 
-    const handleFiltro = () => {
+    const resetFiltro = () => {
         setIndice(0);
         setFeedback(null);
-        setSelecionada("");
+        setSelecionada(null);
         setAcertos(0);
         setRespondidas(0);
     };
 
     const handleResponder = async () => {
-        if (!selecionada || !questaoAtual) return;
+        if (selecionada === null || !questaoAtual) return;
         setRespondendo(true);
         try {
             const res = await validarResposta(questaoAtual.id, selecionada);
             setRespondidas((n) => n + 1);
             if (res.correta) setAcertos((n) => n + 1);
-            setFeedback({ correta: res.correta, alternativaCorreta: res.alternativa_correta });
+            setFeedback({
+                correta: res.correta,
+                gabarito: res.gabarito,
+                justificativa: res.justificativa,
+            });
         } finally {
             setRespondendo(false);
         }
@@ -64,27 +73,17 @@ export default function QuestoesPage() {
 
     const handleProxima = () => {
         setIndice((i) => i + 1);
-        setSelecionada("");
+        setSelecionada(null);
         setFeedback(null);
     };
 
     const handleReiniciar = () => {
         setIndice(0);
-        setSelecionada("");
+        setSelecionada(null);
         setFeedback(null);
         setAcertos(0);
         setRespondidas(0);
     };
-
-    const alternativas: [string, string | null][] = questaoAtual
-        ? [
-            ["A", questaoAtual.alternativa_a],
-            ["B", questaoAtual.alternativa_b],
-            ["C", questaoAtual.alternativa_c],
-            ["D", questaoAtual.alternativa_d],
-            ["E", questaoAtual.alternativa_e],
-        ]
-        : [];
 
     return (
         <div className={styles.page}>
@@ -92,7 +91,7 @@ export default function QuestoesPage() {
             {/* Header */}
             <header className={styles.pageHeader}>
                 <div>
-                    <p className={styles.eyebrow}>Simulado</p>
+                    <p className={styles.eyebrow}>CEBRASPE — Certo ou Errado</p>
                     <h1 className={styles.titulo}>Questões</h1>
                 </div>
             </header>
@@ -104,7 +103,7 @@ export default function QuestoesPage() {
                     value={concursoId ?? ""}
                     onChange={(e) => {
                         setConcursoId(e.target.value ? Number(e.target.value) : undefined);
-                        handleFiltro();
+                        resetFiltro();
                     }}
                 >
                     <option value="">Todos os concursos</option>
@@ -118,7 +117,7 @@ export default function QuestoesPage() {
                     value={assuntoId ?? ""}
                     onChange={(e) => {
                         setAssuntoId(e.target.value ? Number(e.target.value) : undefined);
-                        handleFiltro();
+                        resetFiltro();
                     }}
                 >
                     <option value="">Todos os assuntos</option>
@@ -152,7 +151,7 @@ export default function QuestoesPage() {
                 </div>
             )}
 
-            {/* Conteúdo */}
+            {/* Conteúdo principal */}
             {carregando ? (
                 <Loading full />
             ) : erro ? (
@@ -171,7 +170,6 @@ export default function QuestoesPage() {
                     questao={questaoAtual}
                     indice={indice}
                     total={total}
-                    alternativas={alternativas}
                     selecionada={selecionada}
                     feedback={feedback}
                     respondendo={respondendo}
@@ -185,83 +183,111 @@ export default function QuestoesPage() {
     );
 }
 
-/* ── Sub-componente: QuestaoCard ─────────────────────── */
+/* ── QuestaoCard ─────────────────────────────────────── */
 
 interface QuestaoCardProps {
     questao: Questao;
     indice: number;
     total: number;
-    alternativas: [string, string | null][];
-    selecionada: string;
+    selecionada: boolean | null;
     feedback: Feedback;
     respondendo: boolean;
     assuntosMap: Record<number, string>;
-    onSelecionar: (l: string) => void;
+    onSelecionar: (v: boolean) => void;
     onResponder: () => void;
     onProxima: () => void;
 }
 
 function QuestaoCard({
-    questao, indice, total, alternativas,
-    selecionada, feedback, respondendo, assuntosMap,
-    onSelecionar, onResponder, onProxima,
+    questao, indice, total, selecionada, feedback,
+    respondendo, assuntosMap, onSelecionar, onResponder, onProxima,
 }: QuestaoCardProps) {
+
+    const getBotaoClass = (valor: boolean) => {
+        const base = valor ? styles.btnCerto : styles.btnErrado;
+
+        if (!feedback) {
+            return `${base} ${selecionada === valor ? styles.btnSelecionado : ""}`;
+        }
+
+        // após responder: destacar gabarito e erro
+        if (valor === feedback.gabarito) return `${base} ${styles.btnGabarito}`;
+        if (selecionada === valor && !feedback.correta) return `${base} ${styles.btnErrouEscolha}`;
+        return `${base} ${styles.btnInativo}`;
+    };
+
     return (
         <Card className={styles.questaoCard}>
 
+            {/* Meta */}
             <div className={styles.questaoMeta}>
                 <span className={styles.questaoNum}>
                     {indice + 1} <span>/ {total}</span>
                 </span>
                 {questao.assunto_id && assuntosMap[questao.assunto_id] && (
-                    <Badge variant="accent">
-                        {assuntosMap[questao.assunto_id]}
-                    </Badge>
+                    <Badge variant="accent">{assuntosMap[questao.assunto_id]}</Badge>
                 )}
+                <Badge>CEBRASPE</Badge>
             </div>
 
+            {/* Instrução */}
+            <p className={styles.instrucao}>
+                Julgue o item a seguir como <strong>Certo</strong> ou <strong>Errado</strong>:
+            </p>
+
+            {/* Enunciado */}
             <p className={styles.enunciado}>{questao.enunciado}</p>
 
-            <div className={styles.alternativas}>
-                {alternativas.map(([letra, texto]) =>
-                    texto ? (
-                        <button
-                            key={letra}
-                            disabled={!!feedback}
-                            onClick={() => onSelecionar(letra)}
-                            className={[
-                                styles.alternativa,
-                                selecionada === letra && !feedback ? styles.altSelecionada : "",
-                                feedback && letra === feedback.alternativaCorreta ? styles.altCorreta : "",
-                                feedback && selecionada === letra && !feedback.correta ? styles.altErrada : "",
-                            ].join(" ")}
-                        >
-                            <span className={styles.altLetra}>{letra}</span>
-                            <span className={styles.altTexto}>{texto}</span>
-                        </button>
-                    ) : null
-                )}
+            {/* Botões Certo / Errado */}
+            <div className={styles.opcoes}>
+                <button
+                    className={getBotaoClass(true)}
+                    disabled={!!feedback}
+                    onClick={() => onSelecionar(true)}
+                >
+                    <span className={styles.opcaoIcone}>✓</span>
+                    <span className={styles.opcaoTexto}>Certo</span>
+                </button>
+
+                <button
+                    className={getBotaoClass(false)}
+                    disabled={!!feedback}
+                    onClick={() => onSelecionar(false)}
+                >
+                    <span className={styles.opcaoIcone}>✗</span>
+                    <span className={styles.opcaoTexto}>Errado</span>
+                </button>
             </div>
 
+            {/* Feedback + Justificativa */}
             {feedback && (
                 <div className={`${styles.feedback} ${feedback.correta ? styles.feedbackOk : styles.feedbackErr}`}>
-                    {feedback.correta
-                        ? "✓ Resposta correta! Muito bem!"
-                        : `✗ Resposta incorreta. A alternativa correta era a ${feedback.alternativaCorreta}.`}
+                    <div className={styles.feedbackTitulo}>
+                        {feedback.correta
+                            ? "✓ Resposta correta! O gabarito é " + (feedback.gabarito ? "Certo" : "Errado") + "."
+                            : "✗ Resposta incorreta. O gabarito é " + (feedback.gabarito ? "Certo" : "Errado") + "."}
+                    </div>
+                    {feedback.justificativa && (
+                        <div className={styles.justificativa}>
+                            <span className={styles.justificativaTitulo}>📝 Justificativa:</span>
+                            <span>{feedback.justificativa}</span>
+                        </div>
+                    )}
                 </div>
             )}
 
+            {/* Ações */}
             <div className={styles.botoes}>
                 {!feedback ? (
                     <button
-                        className={styles.btnPrimario}
+                        className={styles.btnConfirmar}
                         onClick={onResponder}
-                        disabled={!selecionada || respondendo}
+                        disabled={selecionada === null || respondendo}
                     >
                         {respondendo ? "Verificando..." : "Confirmar resposta"}
                     </button>
                 ) : (
-                    <button className={styles.btnPrimario} onClick={onProxima}>
+                    <button className={styles.btnConfirmar} onClick={onProxima}>
                         {indice + 1 < total ? "Próxima questão →" : "Ver resultado →"}
                     </button>
                 )}
@@ -271,7 +297,7 @@ function QuestaoCard({
     );
 }
 
-/* ── Sub-componente: ResultadoFinal ──────────────────── */
+/* ── ResultadoFinal ──────────────────────────────────── */
 
 interface ResultadoFinalProps {
     acertos: number;
@@ -317,7 +343,7 @@ function ResultadoFinal({ acertos, total, percentual, onReiniciar }: ResultadoFi
                 </div>
             </div>
 
-            <button className={styles.btnPrimario} onClick={onReiniciar}>
+            <button className={styles.btnConfirmar} onClick={onReiniciar}>
                 Refazer simulado
             </button>
         </Card>
