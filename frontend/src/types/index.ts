@@ -1,4 +1,5 @@
 // concursos-web/src/types/index.ts
+// ALTERAÇÃO: Questao sem alternativas, gabarito boolean, justificativa adicionada
 
 export interface Banca {
     id: number;
@@ -23,17 +24,14 @@ export interface Assunto {
 export interface Questao {
     id: number;
     enunciado: string;
-    alternativa_a: string | null;
-    alternativa_b: string | null;
-    alternativa_c: string | null;
-    alternativa_d: string | null;
-    alternativa_e: string | null;
-    alternativa_correta: string;
+    gabarito: boolean;        // nunca exposto ao usuário antes de responder
+    justificativa: string | null;  // exibida somente após responder
     assunto_id: number | null;
     concurso_id: number | null;
 }
 
 export interface ValidarRespostaResponse {
     correta: boolean;
-    alternativa_correta: string;
+    gabarito: boolean;
+    justificativa: string | null;
 }
